@@ -1,0 +1,17 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+TIMEFRAME = "15m"
+SCAN_INTERVAL = 5  # минут
+MAX_SIGNALS_PER_DAY = 10
+
+# Только топовые и волатильные монеты (можно добавить свои)
+SYMBOLS = [
+    "BTC/USDT:USDT", "ETH/USDT:USDT", "SOL/USDT:USDT", "1000PEPE/USDT:USDT",
+    "WIF/USDT:USDT", "BONK/USDT:USDT", "POPCAT/USDT:USDT", "DOGE/USDT:USDT",
+    "XRP/USDT:USDT", "AVAX/USDT:USDT", "LINK/USDT:USDT", "ADA/USDT:USDT"
+]
