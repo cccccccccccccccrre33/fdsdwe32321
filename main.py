@@ -1,29 +1,32 @@
 import asyncio
+import logging
 from telegram.ext import ApplicationBuilder, ContextTypes
 from scanner import generate_premium_signal
 from bot import send_premium_signal
-from config import TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, SYMBOLS, SCAN_INTERVAL
-import logging
+from config import TELEGRAM_TOKEN, SYMBOLS, SCAN_INTERVAL
 
 logging.basicConfig(level=logging.INFO)
 
 async def job(context: ContextTypes.DEFAULT_TYPE):
     for symbol in SYMBOLS:
-        signal = generate_premium_signal(symbol)
-        if signal:
-            await send_premium_signal(context.bot, signal)
-            await asyncio.sleep(3)  # чтоб не спамить
+        try:
+            signal = generate_premium_signal(symbol)
+            if signal:
+                await send_premium_signal(context.bot, signal)
+                await asyncio.sleep(2)
+        except Exception as e:
+            logging.error(f"Ошибка на символе {symbol}: {e}")
 
 async def main():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-    
-    app.job_queue.run_repeating(job, interval=SCAN_INTERVAL*60, first=15)
-    
-    print("Эксклюзивный бот запущен — сигналы только огонь")
-    await app.initialize()
-    await app.start()
-    await app.updater.start_polling()
-    await asyncio.Event().wait()
+
+    # Запуск job каждые N минут
+    app.job_queue.run_repeating(job, interval=SCAN_INTERVAL * 60, first=10)
+
+    print("🚀 Бот запущен — жду сигналы...")
+
+    # ВНИМАНИЕ: для версии 20 используется только run_polling
+    await app.run_polling()
 
 if __name__ == "__main__":
     asyncio.run(main())
