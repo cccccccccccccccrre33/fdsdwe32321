@@ -1,32 +1,37 @@
 import asyncio
-import logging
+import uvicorn
+import threading
+
 from telegram.ext import ApplicationBuilder, ContextTypes
 from scanner import generate_premium_signal
 from bot import send_premium_signal
 from config import TELEGRAM_TOKEN, SYMBOLS, SCAN_INTERVAL
 
-logging.basicConfig(level=logging.INFO)
+from fastapi_server import app as fastapi_app
+
 
 async def job(context: ContextTypes.DEFAULT_TYPE):
     for symbol in SYMBOLS:
-        try:
-            signal = generate_premium_signal(symbol)
-            if signal:
-                await send_premium_signal(context.bot, signal)
-                await asyncio.sleep(2)
-        except Exception as e:
-            logging.error(f"Ошибка на символе {symbol}: {e}")
+        signal = generate_premium_signal(symbol)
+        if signal:
+            await send_premium_signal(context.bot, signal)
+            await asyncio.sleep(3)
 
-async def main():
+
+async def telegram_bot():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-
-    # Запуск job каждые N минут
     app.job_queue.run_repeating(job, interval=SCAN_INTERVAL * 60, first=10)
 
-    print("🚀 Бот запущен — жду сигналы...")
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+    await asyncio.Event().wait()
 
-    # ВНИМАНИЕ: для версии 20 используется только run_polling
-    await app.run_polling()
+
+def run_fastapi():
+    uvicorn.run(fastapi_app, host="0.0.0.0", port=10000)
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    threading.Thread(target=run_fastapi).start()
+    asyncio.run(telegram_bot())
