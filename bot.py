@@ -1,5 +1,6 @@
 from config import TELEGRAM_CHAT_ID
 
+# Отправка премиум сигнала
 async def send_premium_signal(bot, signal):
     emoji = "🔥" if signal["strength"] == "HIGH" else "🚀"
     text = f"""
@@ -20,3 +21,11 @@ TP3: {signal['tp3']}
     """.strip()
 
     await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=text)
+
+
+# Команда /start
+async def start_command(update, context):
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Бот запущен ✅\nНачинаю анализ монет. Сигналы будут приходить автоматически!"
+    )
