@@ -1,37 +1,37 @@
 import asyncio
-import uvicorn
-import threading
-
-from telegram.ext import ApplicationBuilder, ContextTypes
+import logging
+from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 from scanner import generate_premium_signal
-from bot import send_premium_signal
+from bot import send_premium_signal, start_command
 from config import TELEGRAM_TOKEN, SYMBOLS, SCAN_INTERVAL
 
-from fastapi_server import app as fastapi_app
+logging.basicConfig(level=logging.INFO)
 
-
+# Функция проверки монет и отправки сигналов
 async def job(context: ContextTypes.DEFAULT_TYPE):
     for symbol in SYMBOLS:
         signal = generate_premium_signal(symbol)
         if signal:
             await send_premium_signal(context.bot, signal)
-            await asyncio.sleep(3)
+        # Логируем проверку
+        logging.info(f"Проверена монета {symbol}, сигнал: {signal}")
 
 
-async def telegram_bot():
+async def main():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-    app.job_queue.run_repeating(job, interval=SCAN_INTERVAL * 60, first=10)
 
+    # Команда /start
+    app.add_handler(CommandHandler("start", start_command))
+
+    # Добавляем job_queue для периодических проверок
+    app.job_queue.run_repeating(job, interval=SCAN_INTERVAL*60, first=15)
+
+    print("Бот запущен — сигналы только огонь 🔥")
     await app.initialize()
     await app.start()
     await app.updater.start_polling()
     await asyncio.Event().wait()
 
 
-def run_fastapi():
-    uvicorn.run(fastapi_app, host="0.0.0.0", port=10000)
-
-
 if __name__ == "__main__":
-    threading.Thread(target=run_fastapi).start()
-    asyncio.run(telegram_bot())
+    asyncio.run(main())
