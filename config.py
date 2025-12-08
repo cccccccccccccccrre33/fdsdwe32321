@@ -9,7 +9,6 @@ TIMEFRAME = "15m"
 SCAN_INTERVAL = 5  # минут
 MAX_SIGNALS_PER_DAY = 10
 
-# Только топовые и волатильные монеты (можно добавить свои)
 SYMBOLS = [
     "BTC/USDT:USDT", "ETH/USDT:USDT", "SOL/USDT:USDT", "1000PEPE/USDT:USDT",
     "WIF/USDT:USDT", "BONK/USDT:USDT", "POPCAT/USDT:USDT", "DOGE/USDT:USDT",
