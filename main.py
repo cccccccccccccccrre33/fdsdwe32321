@@ -1,37 +1,25 @@
+import os
 import asyncio
-import logging
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
-from scanner import generate_premium_signal
-from bot import send_premium_signal, start_command
-from config import TELEGRAM_TOKEN, SYMBOLS, SCAN_INTERVAL
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-logging.basicConfig(level=logging.INFO)
+# Получаем токен из переменной окружения
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
-# Функция проверки монет и отправки сигналов
-async def job(context: ContextTypes.DEFAULT_TYPE):
-    for symbol in SYMBOLS:
-        signal = generate_premium_signal(symbol)
-        if signal:
-            await send_premium_signal(context.bot, signal)
-        # Логируем проверку
-        logging.info(f"Проверена монета {symbol}, сигнал: {signal}")
-
+# Команда /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Бот запущен и готов работать!")
 
 async def main():
+    # Создаём приложение
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
-    # Команда /start
-    app.add_handler(CommandHandler("start", start_command))
+    # Регистрируем команду /start
+    app.add_handler(CommandHandler("start", start))
 
-    # Добавляем job_queue для периодических проверок
-    app.job_queue.run_repeating(job, interval=SCAN_INTERVAL*60, first=15)
-
-    print("Бот запущен — сигналы только огонь 🔥")
-    await app.initialize()
-    await app.start()
-    await app.updater.start_polling()
-    await asyncio.Event().wait()
-
+    # Запускаем бота
+    print("Бот стартовал...")
+    await app.run_polling()
 
 if __name__ == "__main__":
     asyncio.run(main())
