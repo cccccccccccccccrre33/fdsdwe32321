@@ -2,28 +2,28 @@ import os
 import asyncio
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from dotenv import load_dotenv
 
-# Берем токен из Environment Variable
+# Загружаем токен из .env
+load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
-if not TELEGRAM_TOKEN:
-    raise ValueError("TELEGRAM_TOKEN не найден. Добавьте Environment Variable на Render")
-
-# Пример простой команды /start
+# Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Бот успешно запущен!")
+    await update.message.reply_text("Бот запущен!")
 
-# Асинхронная функция main для запуска бота
 async def main():
-    # Создаем приложение бота
+    # Создаём приложение бота
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
     # Добавляем обработчик команды /start
     app.add_handler(CommandHandler("start", start))
 
-    # Запускаем бота
-    await app.run_polling()
+    # Запускаем бота (новый способ)
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()  # можно оставить, но лучше ниже
+    await app.run_polling()  # <-- вот здесь реально работает на Render
 
-# Стартуем asyncio
 if __name__ == "__main__":
     asyncio.run(main())
